@@ -1,0 +1,1 @@
+[23-Dec-2023 03:02:11 UTC] PHP Fatal error:  Cannot use Session as Session because the name is already in use in /home/kssw4119/public_html/laravel/app/Http/Controllers/CustomerController.php on line 15
