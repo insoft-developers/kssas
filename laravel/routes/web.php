@@ -28,7 +28,7 @@ use App\Http\Controllers\BackOffice\FinancingController;
 use App\Http\Controllers\BackOffice\UserController;
 use App\Http\Controllers\BackOffice\LoginController;
 use App\Http\Controllers\BackOffice\LevelController;
-
+use Illuminate\Support\Facades\Artisan;
 
 /*
 |--------------------------------------------------------------------------
@@ -40,7 +40,10 @@ use App\Http\Controllers\BackOffice\LevelController;
 | contains the "web" middleware group. Now create something great!
 |
 */
-
+Route::get('/artisan_clear', function () {
+    Artisan::call('cache:clear');
+    Artisan::call('config:clear');
+});
 // ROUTE FOR BACKEND
 Route::group(['middleware' => 'auth'], function () {
     
