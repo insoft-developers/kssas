@@ -19,6 +19,11 @@ jobs:
           password: iMsTQg38mKjd57
           server-dir: /public_html/
 
+      - name: Install Dependencies (PHP vendors)
+        working-directory: /public/html/laravel/
+        run: composer install -q --no-ansi --no-interaction --no-scripts --no-suggest --no-progress --prefer-dist
+
       - name: Run Migration
+        working-directory: /public/html/laravel/
         run: |
           php artisan migrate --force
