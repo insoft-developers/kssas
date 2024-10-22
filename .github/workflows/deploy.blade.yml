@@ -12,6 +12,11 @@ jobs:
       - name: Get Latest Code
         uses: actions/checkout@v2.3.2
 
+      - name: Install Dependencies
+        working-directory: ./laravel/
+        run: composer install --no-dev --optimize-autoloader
+
+        
       - name: Sync Files
         uses: SamKirkland/FTP-Deploy-Action@4.0.0
         with:
@@ -20,13 +25,6 @@ jobs:
           password: iMsTQg38mKjd57
           server-dir: /public_html/ 
         
-      - name: Commit report
-        run: | 
-          git checkout master
-          git pull origin master
-          git push all master
-      - name: Install Dependencies
-        working-directory: ./laravel/
-        run: composer install --no-dev --optimize-autoloader
+      
          
      
