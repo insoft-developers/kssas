@@ -12,12 +12,12 @@ jobs:
         uses: actions/checkout@v2.3.2
 
       - name: Sync Files
-        uses: SamKirkland/FTP-Deploy-Action@4.0.0
+        uses: appleboy/ssh-action@master
         with:
-          server: kssas.com
+          host: kssas.com
           username: kssw4119
           password: iMsTQg38mKjd57
-          server-dir: /public_html/
+          script: '/public_html/ && ./server_deploy.sh'
 
       - name: Install Dependencies
         working-directory: ./laravel/
