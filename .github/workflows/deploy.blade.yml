@@ -20,10 +20,10 @@ jobs:
           server-dir: /public_html/
 
       - name: Install Dependencies (PHP vendors)
-        working-directory: /public_html/laravel/
+        working-directory: ./public_html/laravel/
         run: composer install -q --no-ansi --no-interaction --no-scripts --no-suggest --no-progress --prefer-dist
 
       - name: Run Migration
-        working-directory: /public_html/laravel/
+        working-directory: ./public_html/laravel/
         run: |
           php artisan migrate --force
