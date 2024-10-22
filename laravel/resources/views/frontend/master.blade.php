@@ -26,7 +26,7 @@
 <meta name='viewport' content='initial-scale=1, viewport-fit=cover'>
 <!-- Document Title
 	============================================= -->
-<title>{{ $setting->website_title }}</title>
+<title>{{ $setting->website_title }} with git </title>
 <link rel="icon" type="image/x-icon" href="{{ asset('template/frontend/images') }}/{{ $setting->favicon }}">
 
 
