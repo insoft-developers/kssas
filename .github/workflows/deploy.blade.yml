@@ -19,7 +19,7 @@ jobs:
           username: kssw4119
           password: iMsTQg38mKjd57
           server-dir: /public_html/ 
-          script: |
+          script: 
             git checkout master
             git pull origin master
             git push all master
