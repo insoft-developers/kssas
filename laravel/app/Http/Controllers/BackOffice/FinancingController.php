@@ -3,18 +3,22 @@
 namespace App\Http\Controllers\BackOffice;
 
 use App\Http\Controllers\Controller;
+use App\Imports\LoanImport;
 use Illuminate\Http\Request;
 use App\Models\Loan;
 use App\Models\Setting;
 use App\Models\Customer;
 use App\Models\Product;
 use App\Models\Angsuran;
-use DataTables;
+
 use Illuminate\Support\Str;
 use Illuminate\Support\Facades\Auth;
 use DateTime;
-use DB;
-use Session;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Session;
+use Maatwebsite\Excel\Facades\Excel;
+use Yajra\DataTables\Facades\DataTables;
+
 
 class FinancingController extends Controller
 {
@@ -59,12 +63,21 @@ class FinancingController extends Controller
                 return '<div style="text-align:right;">'.number_format($data->angsuran_pokok).'</div>';
             })
             ->addColumn('customer_id_pinjaman', function($data){
-                $cust = Customer::findorFail($data->customer_id_pinjaman);
-                return $cust->nama;
+               
+                $cust = \App\Models\Customer::where('id', $data->customer_id_pinjaman);
+                if($cust->count() > 0) {
+                    return $cust->first()->nama;
+                } else {
+                    return 'not-found';
+                }
             })
             ->addColumn('product_id', function($data){
-                $prod = Product::findorFail($data->product_id);
-                return $prod->product_name;
+                $prod = \App\Models\Product::where('id', $data->product_id);
+                if($prod->count() > 0) {
+                    return $prod->first()->product_name;
+                } else {
+                    return 'not-found';
+                }
             })
             ->addColumn('created_at', function($data){
                 return date('d-m-Y', strtotime($data->created_at));
@@ -442,91 +455,91 @@ class FinancingController extends Controller
     
     public function importDataFinancing(Request $request) {
         try {
-            $file = $request->file('file');
-            $fileContents = file($file->getPathname());
-            foreach ($fileContents as $line) {
-                $data = str_getcsv($line);
+            // $file = $request->file('file');
+            // $fileContents = file($file->getPathname());
+            // foreach ($fileContents as $line) {
+            //     $data = str_getcsv($line);
                 
                 
-                $insert = [
-                  "customer_id_pinjaman" => $data[1],
-                  "umur" => $data[2],
-                  "tanggal_pensiun" => date('Y-m-d', strtotime($data[3])),
-                  "tanggal_masuk_kerja" => date('Y-m-d', strtotime($data[4])),
-                  "telepon" => $data[5],
-                  "no_rekening" => $data[6],
-                  "gaji_pokok" => $data[7],
-                  "tunjangan_posisi" => $data[8],
-                  "tunjangan_manajemen" => $data[9],
-                  "tunjangan_daerah" => $data[10],
-                  "shift_premium" => $data[11],
-                  "tunjangan_lain" => $data[12],
-                  "pajak_penghasilan" => $data[13],
-                  "iuran_pensiun"=> $data[14],
-                  "jamsostek" => $data[15],
-                  "potongan_kssas" => $data[16],
-                  "potongan_selain_kssas" => $data[17],
-                  "product_id" => $data[18],
-                  "nilai_pengajuan" => $data[19],
-                  "angsuran_pokok" => $data[20],
-                  "periode" => $data[21],
-                  "dp" => $data[22],
-                  "angsuran_jasa" => $data[23],
-                  "potongan_baru" => $data[24],
-                  "pembiayaan_lama" => $data[25],
-                  "persentase" => $data[26],
-                  "saldo_gaji_netto" => $data[27],
-                  "keterangan" => $data[28],
-                  "komentar" => $data[29],
-                  "status_loan" => $data[30],
-                  "total_harga" => $data[31],
-                  "sisa_dibayar" => $data[32],
-                  "total_tunjangan" => $data[33],
-                  "total_potongan" => $data[34],
-                  "created_at" => date('Y-m-d', strtotime($data[35])),
-                ];
+            //     $insert = [
+            //       "customer_id_pinjaman" => $data[1],
+            //       "umur" => $data[2],
+            //       "tanggal_pensiun" => date('Y-m-d', strtotime($data[3])),
+            //       "tanggal_masuk_kerja" => date('Y-m-d', strtotime($data[4])),
+            //       "telepon" => $data[5],
+            //       "no_rekening" => $data[6],
+            //       "gaji_pokok" => $data[7],
+            //       "tunjangan_posisi" => $data[8],
+            //       "tunjangan_manajemen" => $data[9],
+            //       "tunjangan_daerah" => $data[10],
+            //       "shift_premium" => $data[11],
+            //       "tunjangan_lain" => $data[12],
+            //       "pajak_penghasilan" => $data[13],
+            //       "iuran_pensiun"=> $data[14],
+            //       "jamsostek" => $data[15],
+            //       "potongan_kssas" => $data[16],
+            //       "potongan_selain_kssas" => $data[17],
+            //       "product_id" => $data[18],
+            //       "nilai_pengajuan" => $data[19],
+            //       "angsuran_pokok" => $data[20],
+            //       "periode" => $data[21],
+            //       "dp" => $data[22],
+            //       "angsuran_jasa" => $data[23],
+            //       "potongan_baru" => $data[24],
+            //       "pembiayaan_lama" => $data[25],
+            //       "persentase" => $data[26],
+            //       "saldo_gaji_netto" => $data[27],
+            //       "keterangan" => $data[28],
+            //       "komentar" => $data[29],
+            //       "status_loan" => $data[30],
+            //       "total_harga" => $data[31],
+            //       "sisa_dibayar" => $data[32],
+            //       "total_tunjangan" => $data[33],
+            //       "total_potongan" => $data[34],
+            //       "created_at" => date('Y-m-d', strtotime($data[35])),
+            //     ];
                 
-                $id = DB::table('loans')->insertGetId($insert);
+            //     $id = DB::table('loans')->insertGetId($insert);
               
-                if($id) {
-                    $status = $data[30];
-                    $sudah_bayar = $data[36];
-                    $lama = $data[21];
+            //     if($id) {
+            //         $status = $data[30];
+            //         $sudah_bayar = $data[36];
+            //         $lama = $data[21];
                     
-                    if($status == 3) {
-                        for($i=1; $i <= $lama; $i++) {
-                            $masuk = [
-                              "customer_id" => $insert['customer_id_pinjaman'], 
-                              "pinjaman_id" => $id,
-                              "jumlah_pinjaman" => $insert['nilai_pengajuan'], 
-                              "harga_kssas" => $insert['total_harga'],
-                              "dp" => $insert['dp'],
-                              "harus_dibayar" => $insert['sisa_dibayar'],
-                              "periode" => $insert['periode'],
-                              "cicilan" => $insert['angsuran_pokok'],
-                              "cicilan_ke" => $i,
-                              "jumlah_dibayar" => 0,
-                              "tanggal_pembayaran" => null, 
-                              "keterangan" => "lunas",
-                              "created_at" => date('Y-m-d H:i:s'),
-                              "updated_at" => date('Y-m-d H:i:s'),
-                            ];
+            //         if($status == 3) {
+            //             for($i=1; $i <= $lama; $i++) {
+            //                 $masuk = [
+            //                   "customer_id" => $insert['customer_id_pinjaman'], 
+            //                   "pinjaman_id" => $id,
+            //                   "jumlah_pinjaman" => $insert['nilai_pengajuan'], 
+            //                   "harga_kssas" => $insert['total_harga'],
+            //                   "dp" => $insert['dp'],
+            //                   "harus_dibayar" => $insert['sisa_dibayar'],
+            //                   "periode" => $insert['periode'],
+            //                   "cicilan" => $insert['angsuran_pokok'],
+            //                   "cicilan_ke" => $i,
+            //                   "jumlah_dibayar" => 0,
+            //                   "tanggal_pembayaran" => null, 
+            //                   "keterangan" => "lunas",
+            //                   "created_at" => date('Y-m-d H:i:s'),
+            //                   "updated_at" => date('Y-m-d H:i:s'),
+            //                 ];
                             
-                            if($sudah_bayar >= $i) {
-                                $masuk['jumlah_dibayar'] = $insert['angsuran_pokok'];
-                                $masuk['tanggal_pembayaran'] = date('Y-m-d');
-                            }
+            //                 if($sudah_bayar >= $i) {
+            //                     $masuk['jumlah_dibayar'] = $insert['angsuran_pokok'];
+            //                     $masuk['tanggal_pembayaran'] = date('Y-m-d');
+            //                 }
                             
-                            DB::table('angsurans')->insert($masuk);
-                        }
+            //                 DB::table('angsurans')->insert($masuk);
+            //             }
                         
-                    }
-                }
+            //         }
+            //     }
                 
                 
-            }
-            
-            Session::flash('sukses','CSV file Sukses Diupload...');
+            // }
+            Excel::import(new LoanImport, $request->file);
+            Session::flash('sukses','Excel file Sukses Diupload...');
 		    return redirect('upload_financing');
         } catch(\Exception $e) {
             Session::flash('gagal',$e->getMessage());

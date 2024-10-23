@@ -3,24 +3,26 @@
 namespace App\Http\Controllers\BackOffice;
 
 use App\Http\Controllers\Controller;
+use App\Imports\CustomerImport;
 use Illuminate\Http\Request;
 use App\Models\Customer;
 use App\Models\Setting;
 use App\Models\Saving;
 use App\Models\Loan;
 use App\Models\Jabatan;
-use DataTables;
+use App\Models\Slider;
 use Illuminate\Support\Str;
 use Illuminate\Support\Facades\Auth;
-use DB;
-use Session;
-
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Session;
+use Maatwebsite\Excel\Facades\Excel;
+use Yajra\DataTables\Facades\DataTables;
 
 class MembershipController extends Controller
 {
     public function apiMembership() {
         $data = Customer::all();
-        return Datatables::of($data)
+        return DataTables::of($data)
             ->addColumn('is_active', function($data){
                 if($data->is_active == 1) {
                     return '<span class="badge bg-green">active</span>';
@@ -231,42 +233,44 @@ class MembershipController extends Controller
     
     public function importDataAnggota(Request $request) {
         try {
-            $file = $request->file('file');
-            $fileContents = file($file->getPathname());
-            foreach ($fileContents as $line) {
-                $data = str_getcsv($line);
+            // $file = $request->file('file');
+            // $fileContents = file($file->getPathname());
+            // foreach ($fileContents as $line) {
+            //     $data = str_getcsv($line);
                 
                 
-                $insert = [
-                  "nama" => $data[1],
-                  "nip" => $data[2],
-                  "fungsi" => $data[3],
-                  "jenis_kelamin" => $data[4],
-                  "telepon" => $data[5],
-                  "email" => $data[6],
-                  "alamat" => $data[7],
-                  "istri" => $data[8],
-                  "password" => SHA1($data[10]),
-                  "tempat_lahir" => $data[11],
-                  "tanggal_lahir" => date('Y-m-d', strtotime($data[12])),
-                  "nama_ibu" => $data[13],
-                  "jabatan" => $data[14],
-                  "lama_pemotongan" => $data[16],
-                  "jumlah_potongan" => $data[17],
-                  "mulai_berlaku" => $data[18],
-                  "tahun" => $data[19],
-                  "is_active" => $data[20],
-                  "simpanan_pokok" => $data[21],
-                  "simpanan_wajib" => $data[22],
-                  "simpanan_sukarela" => $data[23],
-                  "created_at" => date("Y-m-d H:i:s"),
-                  "updated_at" => date("Y-m-d H:i:s"),
-                ];
+            //     $insert = [
+            //       "nama" => $data[1],
+            //       "nip" => $data[2],
+            //       "fungsi" => $data[3],
+            //       "jenis_kelamin" => $data[4],
+            //       "telepon" => $data[5],
+            //       "email" => $data[6],
+            //       "alamat" => $data[7],
+            //       "istri" => $data[8],
+            //       "password" => SHA1($data[10]),
+            //       "tempat_lahir" => $data[11],
+            //       "tanggal_lahir" => date('Y-m-d', strtotime($data[12])),
+            //       "nama_ibu" => $data[13],
+            //       "jabatan" => $data[14],
+            //       "lama_pemotongan" => $data[16],
+            //       "jumlah_potongan" => $data[17],
+            //       "mulai_berlaku" => $data[18],
+            //       "tahun" => $data[19],
+            //       "is_active" => $data[20],
+            //       "simpanan_pokok" => $data[21],
+            //       "simpanan_wajib" => $data[22],
+            //       "simpanan_sukarela" => $data[23],
+            //       "created_at" => date("Y-m-d H:i:s"),
+            //       "updated_at" => date("Y-m-d H:i:s"),
+            //     ];
                 
-                DB::table('customers')->insert($insert);
+            //     DB::table('customers')->insert($insert);
                 
-            }
-            Session::flash('sukses','CSV file Sukses Diupload...');
+            // }
+
+            Excel::import(new CustomerImport, $request->file);
+            Session::flash('sukses','Excel file Sukses Diupload...');
 		    return redirect('upload_anggota');
         } catch(\Exception $e) {
             Session::flash('gagal',$e->getMessage());

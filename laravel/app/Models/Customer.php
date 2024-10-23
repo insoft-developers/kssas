@@ -28,6 +28,10 @@ class Customer extends Model
       "lama_pemotongan",
       "jumlah_potongan",
       "mulai_berlaku",
-      "tahun"
+      "tahun",
+      "is_active",
+      "simpanan_pokok",
+      "simpanan_wajib",
+      "simpanan_sukarela"
     ];
 }

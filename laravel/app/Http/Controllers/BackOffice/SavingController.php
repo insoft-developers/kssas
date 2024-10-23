@@ -3,22 +3,25 @@
 namespace App\Http\Controllers\BackOffice;
 
 use App\Http\Controllers\Controller;
+use App\Imports\SavingImport;
 use Illuminate\Http\Request;
 use App\Models\Saving;
 use App\Models\Setting;
 use App\Models\Customer;
 use App\Models\Product;
-use DataTables;
 use Illuminate\Support\Str;
 use Illuminate\Support\Facades\Auth;
-use DB;
-use Session;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Session;
+use Maatwebsite\Excel\Facades\Excel;
+use Yajra\DataTables\Facades\DataTables;
+
 class SavingController extends Controller
 
 {
     public function apiSaving() {
         $data = Saving::all();
-        return Datatables::of($data)
+        return DataTables::of($data)
             ->addColumn('created_at', function($data){
                 return '<div style="text-align:center;">'.date('d-m-Y', strtotime($data->created_at)).'</div>';
             })
@@ -29,12 +32,22 @@ class SavingController extends Controller
                 return '<div style="text-align:right;">'.number_format($data->amount_out).'</div>';
             })
             ->addColumn('customer_id', function($data){
-                $cust = \App\Models\Customer::findorFail($data->customer_id);
-                return $cust->nama;
+                $cust = \App\Models\Customer::where('id', $data->customer_id);
+                if($cust->count() > 0) {
+                    return $cust->first()->nama;
+                } else {
+                    return 'not-found';
+                }
+                
             })
             ->addColumn('product_id', function($data){
-                $prod = \App\Models\Product::findorFail($data->product_id);
-                return $prod->product_name;
+               
+                $prod = \App\Models\Product::where('id', $data->product_id);
+                if($prod->count() > 0) {
+                    return $prod->first()->product_name;
+                } else {
+                    return 'not-found';
+                }
             })
             ->addColumn('status', function($data){
                 if($data->status == 1) {
@@ -176,29 +189,8 @@ class SavingController extends Controller
     
     public function importDataSimpanan(Request $request) {
         try {
-            $file = $request->file('file');
-            $fileContents = file($file->getPathname());
-            foreach ($fileContents as $line) {
-                $data = str_getcsv($line);
-                
-                
-                $insert = [
-                  "customer_id" => $data[1],
-                  "product_id" => $data[2],
-                  "amount_in" => $data[3],
-                  "amount_out" => $data[4],
-                  "description" => $data[5],
-                  "created_at" => date('Y-m-d', strtotime($data[6])),
-                  "updated_at" => date('Y-m-d', strtotime($data[6])),
-                ];
-                
-                DB::table('savings')->insert($insert);
-                
-            }
-            
-           
-            
-            Session::flash('sukses','CSV file Sukses Diupload...');
+            Excel::import(new SavingImport, $request->file);
+            Session::flash('sukses','Excel file Sukses Diupload...');
 		    return redirect('upload_simpanan');
         } catch(\Exception $e) {
             Session::flash('gagal',$e->getMessage());
